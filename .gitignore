@@ -1,0 +1,29 @@
+# Android build and local signing material
+/build/
+*.apk
+*.apk.idsig
+*.aab
+*.dex
+*.jks
+*.keystore
+local.properties
+
+# JavaScript dependencies and browser output
+/node_modules/
+/playwright-report/
+/test-results/
+
+# Local QA/browser state and distribution bundles
+/.qa/
+/.edge-*/
+*.zip
+
+# Historical root-level captures are retained locally but not published.
+/*.png
+
+# Editor and operating-system files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

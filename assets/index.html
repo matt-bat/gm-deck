@@ -1,0 +1,581 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>GM Deck</title>
+  <style>
+    :root { --bg:#0a0d14; --panel:#151b27; --panel2:#1d2635; --ink:#f4f7fb; --muted:#9eabc0; --gold:#f0b44d; --red:#dc5b63; --green:#57c785; --blue:#58a6ff; --line:#2b374a; }
+    body[data-theme="arcane"] { --gold:#8db4ff; --green:#8c7cff; --blue:#70d7e8; }
+    body[data-theme="crimson"] { --gold:#ff846d; --green:#e76883; --blue:#d4a3ff; }
+    * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    html,body { margin:0; height:100%; background:var(--bg); color:var(--ink); font:15px/1.3 system-ui,sans-serif; overflow:hidden; }
+    button,input,textarea,select { font:inherit; }
+    button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible { outline:3px solid var(--blue); outline-offset:2px; }
+    header { height:48px; display:flex; align-items:center; padding:0 14px; background:#0d111a; border-bottom:1px solid var(--line); }
+    .brand { border:1px solid var(--line); border-radius:9px; padding:7px 9px; background:var(--panel2); font-weight:800; letter-spacing:.06em; color:var(--gold); margin-right:10px; white-space:nowrap; }
+    nav { display:flex; gap:5px; flex:1; height:100%; align-items:center; }
+    nav button { border:0; border-radius:9px; padding:7px 8px; color:var(--muted); background:transparent; font-weight:700; display:flex; align-items:center; gap:5px; }
+    nav button img { width:17px; height:17px; opacity:.72; filter:invert(82%); }
+    nav button.active img { opacity:1; filter:brightness(0); }
+    nav button.active { color:#111; background:var(--gold); }
+    body[data-view="dm"] nav [data-role="player"],body[data-view="player"] nav [data-role="dm"] { display:none; }
+    #status { display:flex; gap:7px; align-items:center; color:var(--muted); font-size:12px; white-space:nowrap; }
+    #networkDot { width:7px; height:7px; border-radius:50%; background:var(--red); }
+    #networkDot.online { background:var(--green); box-shadow:0 0 6px var(--green); }
+    #networkText { display:none; }
+    #clock { font-variant-numeric:tabular-nums; }
+    main { height:calc(100% - 82px); padding:10px; overflow:auto; }
+    .page { display:none; height:100%; }
+    .page.active { display:block; }
+    .grid { display:grid; grid-template-columns:repeat(5,1fr); grid-auto-rows:82px; gap:8px; }
+    .launch { height:82px; min-height:0; padding:6px 10px; overflow:hidden; border:1px solid var(--line); border-radius:13px; background:linear-gradient(145deg,var(--panel2),var(--panel)); color:var(--ink); text-align:left; }
+    .launch strong { display:block; color:var(--gold); font-size:15px; line-height:1.15; margin-bottom:2px; }
+    .launch small { display:block; color:var(--muted); font-size:12px; line-height:1.15; }
+    .launch.pc strong { color:var(--blue); }
+    .cols { display:grid; grid-template-columns:1fr 1.25fr; gap:10px; height:100%; }
+    .card { background:var(--panel); border:1px solid var(--line); border-radius:13px; padding:11px; overflow:auto; }
+    h2 { font-size:16px; color:var(--gold); margin:0 0 9px; }
+    .dice-row { display:grid; grid-template-columns:repeat(4,1fr); gap:7px; }
+    .die,.action { border:1px solid #3c4a61; background:var(--panel2); color:var(--ink); border-radius:11px; padding:10px; font-weight:800; }
+    .die:active,.action:active,.launch:active { transform:scale(.98); background:#27344a; }
+    .result { display:flex; align-items:center; justify-content:center; height:105px; margin:9px 0; border-radius:13px; background:#0d111a; border:1px solid var(--line); font-size:50px; font-weight:900; color:var(--gold); }
+    .result small { font-size:14px; color:var(--muted); margin-left:10px; }
+    .inline { display:flex; gap:7px; align-items:center; flex-wrap:wrap; }
+    input,textarea,select { background:#0d111a; border:1px solid #3c4a61; color:var(--ink); border-radius:9px; padding:9px; }
+    input[type=number] { width:76px; }
+    input[type=text] { min-width:0; flex:1; }
+    .primary { background:var(--gold); color:#15100a; border-color:var(--gold); }
+    .green { background:var(--green); color:#07160e; border-color:var(--green); }
+    .danger { color:#ffd8da; border-color:#784048; }
+    #history { color:var(--muted); font-size:13px; margin-top:8px; max-height:62px; overflow:auto; }
+    #turnbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+    #round { color:var(--gold); font-weight:800; }
+    #initList { list-style:none; padding:0; margin:8px 0; }
+    #initiative li { display:grid; grid-template-columns:44px 1fr 180px 32px; align-items:center; gap:7px; padding:6px 8px; border-bottom:1px solid var(--line); }
+    #initiative li.current { background:#253622; border-radius:9px; border-color:var(--green); }
+    .score { font-size:19px; font-weight:900; color:var(--gold); }
+    .remove { border:0; background:transparent; color:var(--red); font-weight:900; font-size:18px; }
+    .hpbox { display:grid; grid-template-columns:32px 32px 52px 32px 32px; gap:3px; align-items:center; }
+    .hpbox button { border:1px solid #44536b; background:#202a3b; color:var(--ink); border-radius:7px; padding:5px 2px; font-weight:800; }
+    .hpbox span { text-align:center; font-weight:800; color:var(--green); }
+    .ref-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+    .ref { padding:7px; border-radius:10px; border:1px solid var(--line); color:var(--ink); background:var(--panel2); text-align:left; font-size:13px; }
+    .ref b { display:block; color:var(--blue); margin-bottom:3px; }
+    .conditions { display:flex; flex-wrap:wrap; gap:6px; }
+    .chip { border:1px solid #44536b; color:#dce6f5; background:#202a3b; padding:6px 9px; border-radius:999px; font-size:13px; }
+    .checklist label { display:flex; gap:7px; align-items:center; padding:4px; border-bottom:1px solid var(--line); font-size:13px; }
+    .checklist input { width:18px; height:18px; }
+    textarea { width:100%; height:70px; resize:none; }
+    .counter { display:grid; grid-template-columns:1fr 38px 42px 38px; align-items:center; gap:4px; margin:3px 0; }
+    .counter output { text-align:center; font-size:19px; font-weight:900; color:var(--gold); }
+    .hint { color:var(--muted); font-size:13px; }
+    .sound-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:9px; }
+    .sound { height:50px; min-height:0; padding:3px; border:1px solid #4b3b5f; border-radius:11px; background:linear-gradient(145deg,#292039,#171522); color:var(--ink); font-size:13px; font-weight:800; }
+    .sound small { display:block; color:#bcaacf; font-size:11px; line-height:1.1; font-weight:500; margin-top:2px; }
+    .setup-row { display:grid; grid-template-columns:125px minmax(0,1fr) 82px; gap:8px; align-items:center; margin:9px 0; }
+    .setup-row > * { min-width:0; }
+    .setup-row.profile-row { grid-template-columns:105px minmax(0,1fr) 62px; }
+    .setup-row.system-row { grid-template-columns:78px minmax(0,1fr) 74px; }
+    .setup-row.link-row { grid-template-columns:105px minmax(0,1fr) 72px; }
+    .setup-profile .setup-row { margin:5px 0; }
+    .setup-profile input,.setup-profile select,.setup-profile .action { padding:8px; }
+    .setup-options { margin-top:8px; }
+    .setup-pair p { margin:6px 0; font-size:13px; }
+    .setup-pair .hint { line-height:1.2; }
+    .srd-search { display:grid; grid-template-columns:115px 1fr 75px; gap:7px; }
+    #srdResults { display:flex; flex-wrap:wrap; gap:5px; margin:8px 0; max-height:70px; overflow:auto; }
+    #srdDetail { font-size:13px; line-height:1.35; background:#0d111a; border-radius:9px; padding:8px; min-height:64px; }
+    #srdDetail h3 { color:var(--gold); margin:0 0 4px; font-size:16px; }
+    .credit { color:var(--muted); font-size:12px; margin:6px 0; }
+    .spark { min-height:54px; margin-top:7px; padding:8px; border:1px solid var(--line); border-radius:9px; background:#0d111a; color:var(--gold); }
+    .timer { font-size:25px; font-weight:900; color:var(--gold); font-variant-numeric:tabular-nums; min-width:78px; text-align:center; }
+    #safetyState { font-weight:800; color:var(--green); }
+    #controlStrip { height:34px; display:flex; align-items:center; gap:5px; padding:3px 8px; background:#0d111a; border-top:1px solid var(--line); color:var(--muted); font-size:12px; overflow:hidden; }
+    #controlStrip button,#controlStrip select { height:27px; min-width:0; padding:3px 6px; border:1px solid var(--line); border-radius:8px; background:var(--panel2); color:var(--ink); font-weight:700; }
+    #stripCampaign { color:var(--gold); font-weight:800; max-width:105px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    #stripCombat,#stripAudio,#stripTimer { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    #stripAudio { max-width:115px; }
+    #stripAudio.playing { color:var(--green); }
+    .module-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+    .module-grid label { display:flex; align-items:center; gap:6px; background:var(--panel2); border-radius:8px; padding:7px; }
+    .module-grid input { width:18px; height:18px; }
+    .ambient.active { background:var(--green); color:#07160e; border-color:var(--green); }
+    .volume { width:120px; accent-color:var(--gold); }
+    #toast { position:fixed; left:50%; bottom:43px; transform:translate(-50%,12px); opacity:0; pointer-events:none; z-index:9; background:#edf6ff; color:#101722; border-radius:9px; padding:8px 14px; font-weight:800; transition:.18s; }
+    #toast.show { opacity:1; transform:translate(-50%,0); }
+    #configBox { height:78px; font:11px/1.2 monospace; }
+    .favorite { color:var(--gold); }
+    .welcome { position:fixed; inset:0; z-index:20; display:none; align-items:center; justify-content:center; background:#050810dc; }
+    .welcome.show { display:flex; }
+    .welcome-card { width:690px; max-height:390px; overflow:auto; padding:18px; border:1px solid var(--gold); border-radius:16px; background:var(--panel); box-shadow:0 18px 60px #000; }
+    .welcome-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:10px 0; }
+    .welcome-grid div { background:var(--panel2); border-radius:10px; padding:9px; }
+    .welcome-grid b { display:block; color:var(--gold); }
+    .turn-avatar { width:23px; height:23px; display:inline-flex; align-items:center; justify-content:center; flex:none; border-radius:50%; background:var(--blue); color:#07111d; font-size:10px; font-weight:900; }
+    .turn-avatar.foe { background:var(--red); color:#fff; }
+    #turnControl { display:flex; align-items:center; gap:5px; max-width:165px; }
+    #stripCombat { overflow:hidden; text-overflow:ellipsis; }
+    #turnPanel { position:fixed; right:9px; bottom:39px; z-index:12; display:none; width:410px; max-width:calc(100% - 18px); padding:10px; border:1px solid var(--gold); border-radius:13px; background:var(--panel); box-shadow:0 12px 35px #000b; }
+    #turnPanel.show { display:block; }
+    #turnPanelName { color:var(--gold); font-size:17px; font-weight:900; }
+    #turnPanelHp { color:var(--green); font-weight:800; }
+    #diceControl { white-space:nowrap; }
+    #dicePanel { position:fixed; left:50%; transform:translateX(-50%); bottom:39px; z-index:12; display:none; width:620px; max-width:calc(100% - 18px); padding:10px; border:1px solid var(--gold); border-radius:13px; background:var(--panel); box-shadow:0 12px 35px #000b; }
+    #dicePanel.show { display:block; }
+    .quick-dice { display:grid; grid-template-columns:repeat(7,1fr); gap:5px; }
+    .quick-dice button { padding:9px 3px; }
+    #quickDiceResult { color:var(--gold); font-size:22px; font-weight:900; min-width:50px; text-align:center; }
+    #helpPanel { position:fixed; left:50%; bottom:39px; transform:translateX(-50%); z-index:13; display:none; width:600px; max-width:calc(100% - 18px); padding:12px; border:1px solid var(--blue); border-radius:13px; background:var(--panel); box-shadow:0 12px 35px #000b; }
+    #helpPanel.show { display:block; }
+    #helpTitle { color:var(--gold); font-size:17px; font-weight:900; }
+    #scenePanel { position:fixed; left:50%; bottom:39px; transform:translateX(-50%); z-index:14; display:none; width:720px; max-width:calc(100% - 18px); max-height:300px; overflow:auto; padding:10px; border:1px solid var(--green); border-radius:13px; background:var(--panel); box-shadow:0 12px 35px #000b; }
+    #scenePanel.show { display:block; }
+    .scene-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-top:8px; }
+    .scene-card { min-height:54px; padding:6px 8px; text-align:left; border:1px solid #3c4a61; border-radius:10px; background:var(--panel2); color:var(--ink); }
+    .scene-card strong { display:block; color:var(--gold); font-size:14px; }
+    .scene-card small { display:block; color:var(--muted); font-size:11px; line-height:1.2; white-space:normal; overflow-wrap:anywhere; }
+    .scene-card.active { border-color:var(--green); background:#20372d; }
+    .scene-editor-grid { display:grid; grid-template-columns:115px minmax(0,1fr) 105px 105px 72px; gap:6px; margin-top:7px; }
+    .scene-editor-grid label { color:var(--muted); font-size:11px; }
+    .scene-editor-grid input,.scene-editor-grid select { width:100%; margin-top:2px; padding:6px; font-size:12px; }
+    .scene-layers { display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:7px; }
+    .scene-layers label { display:flex; align-items:center; gap:4px; padding:5px 7px; border-radius:8px; background:var(--panel2); }
+    .scene-layers input { width:16px; height:16px; }
+    #viewPanel { position:fixed; top:54px; left:10px; z-index:16; display:none; width:270px; padding:10px; border:1px solid var(--blue); border-radius:13px; background:var(--panel); box-shadow:0 12px 35px #000b; }
+    #viewPanel.show { display:block; }
+    .view-choice { width:100%; margin-top:7px; text-align:left; }
+    .view-choice strong { display:block; color:var(--gold); }
+    .player-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+    .player-stat { padding:5px; border:1px solid var(--line); border-radius:10px; background:#0d111a; text-align:center; }
+    .player-stat label { display:block; color:var(--muted); font-size:11px; }
+    .player-stat input { width:100%; padding:4px; margin-top:2px; text-align:center; font-weight:800; }
+    .player-hp { display:flex; align-items:center; justify-content:center; gap:5px; margin:5px 0; }
+    .player-hp .action { padding:8px; }
+    .player-hp output { min-width:100px; text-align:center; color:var(--green); font-size:24px; font-weight:900; }
+    .player-rolls { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+    .player-rolls button { padding:8px 4px; }
+    .player-condition.active { border-color:var(--gold); background:#3a3020; color:var(--gold); }
+    #playerTurn { padding:7px 9px; margin-bottom:7px; border:1px solid var(--line); border-radius:10px; background:#0d111a; }
+    #playerTurn strong { color:var(--gold); }
+    #player .card { padding:9px; }
+    #player h2 { margin-bottom:6px; }
+    #player textarea { height:48px; }
+    #sounds .card { padding:8px; }
+    #sounds h2 { margin-bottom:5px; }
+    #sounds .action { padding:7px 9px; }
+    #campaignSelect,#campaignName,#gameSystem,#vttChoice { font-size:13px; }
+    @media (max-width:760px) { nav button { padding:7px 9px; } .grid { grid-template-columns:repeat(3,1fr); } }
+  </style>
+</head>
+<body data-view="dm">
+  <header>
+    <button id="viewSwitch" class="brand" aria-label="Switch DM or Player view">DM VIEW ▾</button>
+    <nav>
+      <button data-page="home" data-role="dm" class="active"><img src="icons/vtt.svg" alt="">VTT</button>
+      <button data-page="player" data-role="player"><img src="icons/vtt.svg" alt="">Character</button>
+      <button data-page="dice"><img src="icons/dice.svg" alt="">Dice</button>
+      <button data-page="initiative" data-role="dm"><img src="icons/combat.svg" alt="">Combat</button>
+      <button data-page="reference"><img src="icons/library.svg" alt="">Library</button>
+      <button data-page="sounds"><img src="icons/audio.svg" alt="">Audio</button>
+      <button data-page="session" data-role="dm"><img src="icons/session.svg" alt="">Session</button>
+      <button data-page="setup"><img src="icons/setup.svg" alt="">Setup</button>
+    </nav>
+    <div id="status"><span id="networkDot"></span><span id="networkText">Offline</span><span id="clock"></span></div>
+  </header>
+  <main>
+    <section id="home" class="page active">
+      <div class="grid">
+        <button class="launch" data-tile="foundry" data-vtt="foundry"><strong>Foundry VTT</strong><small>Open your saved server</small></button>
+        <button class="launch" data-tile="roll20" data-vtt="roll20"><strong>Roll20 Tabletop</strong><small>Open your saved game</small></button>
+        <button class="launch" data-tile="characters" data-url="https://roll20.net/characters"><strong>Roll20 Characters</strong><small>D&amp;D and Pathfinder sheets</small></button>
+        <button class="launch pc" data-tile="macrodeck" data-url="gmdeck://macrodeck"><strong>Macro Deck</strong><small>PC buttons and automation</small></button>
+        <button class="launch" data-tile="aon" data-system="pf2e" data-url="https://2e.aonprd.com/"><strong>Archives of Nethys</strong><small>Official Pathfinder 2e rules</small></button>
+        <button class="launch" data-tile="dndrules" data-system="dnd5e" data-url="https://www.dndbeyond.com/sources/dnd/free-rules"><strong>D&amp;D Free Rules</strong><small>Official current rules</small></button>
+        <button class="launch" data-tile="audio" data-local-page="sounds"><strong>Audio Deck</strong><small>Background ambience and effects</small></button>
+        <button class="launch pc" data-tile="pclink" data-url="gmdeck://kdeconnect"><strong>PC Link</strong><small>Files, media and touchpad</small></button>
+        <button class="launch" data-tile="nexus" data-system="pf2e" data-url="https://app.demiplane.com/nexus/pathfinder2e"><strong>Pathfinder Nexus</strong><small>Characters and compendium</small></button>
+        <button class="launch" data-tile="pathbuilder" data-system="pf2e" data-url="https://pathbuilder2e.com/app.html"><strong>Pathbuilder 2e</strong><small>Character builder</small></button>
+        <button class="launch" data-tile="discord" data-url="gmdeck://discord"><strong>Discord</strong><small>Launch app or web client</small></button>
+        <button class="launch" data-tile="ambience" data-ambient-preset="rain"><strong>Background Ambience</strong><small>Offline audio that keeps playing</small></button>
+        <button class="launch pc" data-tile="browser" data-url="gmdeck://browser"><strong>Browser</strong><small>Open the standard web browser</small></button>
+        <button class="launch pc" data-tile="settings" data-url="gmdeck://settings"><strong>System Settings</strong><small>Wi-Fi, display and Android options</small></button>
+      </div>
+    </section>
+
+    <section id="player" class="page">
+      <div class="cols">
+        <div class="card">
+          <h2>Character dashboard</h2>
+          <div class="inline"><input id="playerName" type="text" placeholder="Character name"><input id="playerClass" type="text" placeholder="Class / ancestry"></div>
+          <div class="player-stats" style="margin-top:7px"><div class="player-stat"><label for="playerMaxHp">Max HP</label><input id="playerMaxHp" type="number" min="0"></div><div class="player-stat"><label for="playerAc">AC</label><input id="playerAc" type="number" min="0"></div><div class="player-stat"><label for="playerSpeed">Speed</label><input id="playerSpeed" type="number" min="0"></div><div class="player-stat"><label for="playerLevel">Level</label><input id="playerLevel" type="number" min="1"></div></div>
+          <div class="player-hp"><button class="action" data-player-hp="-5">−5</button><button class="action" data-player-hp="-1">−</button><output id="playerHp">0 / 0</output><button class="action" data-player-hp="1">+</button><button class="action" data-player-hp="5">+5</button></div>
+          <div class="counter"><span>Hero Points / Inspiration</span><button class="action" data-player-resource="-1">−</button><output id="playerResource">0</output><button class="action" data-player-resource="1">+</button></div>
+          <textarea id="playerNotes" placeholder="Personal notes, spells, inventory, reminders…" style="margin-top:7px"></textarea>
+        </div>
+        <div class="card">
+          <div id="playerTurn"><strong>Turn status</strong><div id="playerNow" class="hint">No active combatant</div></div>
+          <h2>Quick d20 actions</h2>
+          <div class="player-rolls"><button class="action primary" data-player-roll="attack">Attack</button><button class="action" data-player-roll="check">Check</button><button class="action" data-player-roll="save">Save</button><button class="action" data-player-roll="initiative">Initiative</button></div>
+          <div class="player-stats" style="margin-top:7px"><div class="player-stat"><label for="playerAttack">Attack</label><input id="playerAttack" type="number"></div><div class="player-stat"><label for="playerCheck">Check</label><input id="playerCheck" type="number"></div><div class="player-stat"><label for="playerSave">Save</label><input id="playerSave" type="number"></div><div class="player-stat"><label for="playerInitiative">Initiative</label><input id="playerInitiative" type="number"></div></div>
+          <h2 style="margin-top:8px">Conditions</h2>
+          <div id="playerConditions" class="conditions"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="dice" class="page">
+      <div class="cols">
+        <div class="card">
+          <h2>Quick roll</h2>
+          <div class="dice-row">
+            <button class="die" data-die="4">d4</button><button class="die" data-die="6">d6</button>
+            <button class="die" data-die="8">d8</button><button class="die" data-die="10">d10</button>
+            <button class="die" data-die="12">d12</button><button class="die" data-die="20">d20</button>
+            <button class="die" data-die="100">d100</button><button class="die" data-special="coin">Coin</button>
+          </div>
+          <div class="inline" style="margin-top:8px"><label>Modifier</label><input id="modifier" type="number" value="0"><button class="action" id="adv">Adv</button><button class="action" id="dis">Dis</button></div>
+        </div>
+        <div class="card">
+          <div id="result" class="result">—</div>
+          <div class="inline"><input id="formula" type="text" value="2d6+3" aria-label="Dice formula"><button class="action primary" id="rollFormula">Roll</button><button class="action danger" id="clearHistory">Clear</button></div>
+          <div id="history"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="initiative" class="page">
+      <div class="cols">
+        <div class="card">
+          <h2>Add combatant</h2>
+          <div class="inline"><input id="initName" type="text" placeholder="Name"><input id="initScore" type="number" placeholder="Init"><input id="initHp" type="number" placeholder="HP"><button class="action primary" id="addInit">Add</button></div>
+          <p class="hint">Track initiative, rounds and HP. Everything survives app restarts.</p>
+          <div class="inline"><label>Type</label><select id="initSide"><option value="player">Player / ally</option><option value="foe">Foe</option></select><button class="action" id="rollParty">Add 4 foes</button><button class="action danger" id="clearInit">Clear combat</button></div>
+        </div>
+        <div class="card">
+          <div id="turnbar"><span id="round">Round 1</span><span class="inline"><button class="action" id="prevTurn">Previous</button><button class="action green" id="nextTurn">Next turn</button></span></div>
+          <ol id="initList"></ol>
+        </div>
+      </div>
+    </section>
+
+    <section id="reference" class="page">
+      <div class="cols">
+        <div class="card">
+          <h2>Creature, spell and item libraries</h2>
+          <div class="ref-grid">
+            <button class="ref" data-url="https://2e.aonprd.com/Creatures.aspx"><b>PF2e Creatures</b>Archives of Nethys</button>
+            <button class="ref" data-url="https://2e.aonprd.com/Spells.aspx"><b>PF2e Spells</b>Traditions and ranks</button>
+            <button class="ref" data-url="https://2e.aonprd.com/Equipment.aspx"><b>PF2e Equipment</b>Items and treasure</button>
+            <button class="ref" data-url="https://www.dndbeyond.com/monsters"><b>D&amp;D Monsters</b>Official listings</button>
+            <button class="ref" data-url="https://www.dndbeyond.com/spells"><b>D&amp;D Spells</b>Official listings</button>
+            <button class="ref" data-url="https://www.dndbeyond.com/equipment"><b>D&amp;D Equipment</b>Official listings</button>
+          </div>
+          <div class="inline" style="margin-top:9px"><input id="libraryQuery" type="text" placeholder="Query"><button class="action primary" id="searchPf2">Search PF2e</button><button class="action" id="searchDnd">Search D&amp;D</button></div>
+        </div>
+        <div class="card">
+          <h2>D&amp;D 5e SRD quick reference</h2>
+          <div class="srd-search"><select id="srdType"><option value="monsters">Monsters</option><option value="spells">Spells</option><option value="equipment">Equipment</option><option value="magic-items">Magic items</option><option value="conditions">Conditions</option></select><input id="srdQuery" type="text" placeholder="Owlbear, fireball, rope…"><button class="action primary" id="searchSrd">Find</button></div>
+          <div id="srdResults"></div>
+          <div id="srdDetail"><span class="hint">Live, searchable open-rule data. Enter a name or browse a category.</span></div>
+          <details style="margin-top:7px"><summary class="hint">Condition tracking prompts</summary><div class="conditions" id="conditionChips" style="margin-top:7px"></div></details>
+        </div>
+      </div>
+    </section>
+
+    <section id="sounds" class="page">
+      <div class="card">
+        <h2>Offline soundboard</h2>
+        <div class="sound-grid">
+          <button class="sound" data-sound="initiative">Initiative!<small>bright encounter bell</small></button>
+          <button class="sound" data-sound="success">Success<small>ascending flourish</small></button>
+          <button class="sound" data-sound="failure">Failure<small>descending sting</small></button>
+          <button class="sound" data-sound="critical">Critical!<small>dramatic impact</small></button>
+          <button class="sound" data-sound="thunder">Thunder<small>low rumble</small></button>
+          <button class="sound" data-sound="door">Heavy Door<small>stone and wood slam</small></button>
+          <button class="sound" data-sound="coins">Treasure<small>coins and gems</small></button>
+          <button class="sound" data-sound="potion">Potion<small>magical bubbles</small></button>
+          <button class="sound" data-sound="heartbeat">Danger<small>double heartbeat</small></button>
+          <button class="sound" data-sound="magic">Magic<small>arcane shimmer</small></button>
+        </div>
+        <div class="inline" style="margin-top:9px"><button class="action danger" id="stopSounds">Stop sounds</button><button class="action" data-url="https://tabletopaudio.com/soundpad.html">Online soundpads (browser)</button><span class="hint">Built-in effects are local. Browser audio may pause when hidden.</span></div>
+        <h2 style="margin-top:12px">Background soundscapes</h2>
+        <div class="inline"><button class="action ambient" data-ambient-layer="rain">Rain</button><button class="action ambient" data-ambient-layer="tavern">Tavern</button><button class="action ambient" data-ambient-layer="dungeon">Dungeon</button><button class="action ambient" data-ambient-layer="forest">Forest</button><button class="action ambient" data-ambient-layer="campfire">Campfire</button><button class="action danger" id="stopAmbient">Stop</button></div>
+        <div class="inline" style="margin-top:7px"><label>Ambience volume</label><input id="ambientVolume" class="volume" type="range" min="5" max="100" value="45"><span id="ambientVolumeLabel">45%</span><span id="ambientStatus" class="hint">Tap multiple layers to mix them.</span></div>
+      </div>
+    </section>
+
+    <section id="session" class="page">
+      <div class="cols">
+        <div class="card checklist">
+          <h2>Session checklist</h2>
+          <div id="checks"></div>
+          <button class="action danger" id="resetSession" style="margin-top:8px">Reset session</button>
+          <h2 style="margin-top:10px">GM Sparks</h2>
+          <div class="inline"><button class="action" data-spark="npc">NPC</button><button class="action" data-spark="place">Place</button><button class="action" data-spark="twist">Twist</button><button class="action" data-spark="loot">Loot</button></div>
+          <div id="sparkOutput" class="spark">Tap a prompt when improvisation strikes.</div>
+        </div>
+        <div class="card">
+          <h2>Scratchpad</h2>
+          <textarea id="notes" placeholder="NPC names, rulings, treasure, reminders…"></textarea>
+          <div class="counter"><span>Hero Points / Inspiration</span><button class="action" data-count="hero" data-delta="-1">−</button><output id="hero">0</output><button class="action" data-count="hero" data-delta="1">+</button></div>
+          <div class="counter"><span>Party resources</span><button class="action" data-count="party" data-delta="-1">−</button><output id="party">0</output><button class="action" data-count="party" data-delta="1">+</button></div>
+          <h2 style="margin-top:10px">Scene clock</h2>
+          <div class="inline"><output id="sceneTimer" class="timer">00:00</output><button class="action" data-minutes="5">5m</button><button class="action" data-minutes="10">10m</button><button class="action" data-minutes="15">15m</button><button class="action danger" id="stopTimer">Stop</button></div>
+          <h2 style="margin-top:10px">Table safety</h2>
+          <div class="inline"><button class="action danger" data-safety="PAUSE">Pause</button><button class="action" data-safety="CHECK IN">Check in</button><button class="action" data-safety="FADE / SKIP">Fade / skip</button><span id="safetyState">Ready</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="setup" class="page">
+      <div class="cols">
+        <div class="card setup-profile">
+          <h2>Campaign profile</h2>
+          <div class="setup-row profile-row"><label for="campaignSelect">Campaign</label><select id="campaignSelect"></select><button class="action" id="newCampaign">New</button></div>
+          <div class="setup-row profile-row"><label for="campaignName">Name</label><input id="campaignName" type="text" placeholder="Campaign name"><button class="action danger" id="deleteCampaign">Delete</button></div>
+          <div class="setup-row system-row"><label for="gameSystem">System</label><select id="gameSystem"><option value="both">Both systems</option><option value="dnd5e">D&amp;D 5e</option><option value="pf2e">Pathfinder 2e</option></select><select id="vttChoice"><option value="both">Both</option><option value="foundry">Foundry</option><option value="roll20">Roll20</option></select></div>
+          <div class="setup-row link-row"><label for="foundryUrl">Foundry URL</label><input id="foundryUrl" type="text" placeholder="Server URL"><button class="action primary" id="testFoundry">Open</button></div>
+          <div class="setup-row link-row"><label for="roll20Url">Roll20 game</label><input id="roll20Url" type="text" placeholder="Game URL"><button class="action primary" id="testRoll20">Open</button></div>
+          <button class="action green" id="saveLinks">Save profile</button>
+          <details class="setup-options"><summary><b>Appearance and visible tools</b></summary><div class="setup-row profile-row"><label for="theme">Deck theme</label><select id="theme"><option value="gold">Classic gold</option><option value="arcane">Arcane blue</option><option value="crimson">Crimson</option></select><button class="action" id="applyTheme">Apply</button></div><p class="hint">Visible modules and home tiles</p><div id="moduleToggles" class="module-grid" style="margin-top:7px"></div><div id="tileToggles" class="module-grid" style="margin-top:7px"></div></details>
+          <p id="saveStatus" class="hint"></p>
+        </div>
+        <div class="card setup-pair">
+          <h2>Later PC pairing</h2>
+          <p><b>Macro Deck:</b> install the Windows host, then enter its address and pairing code in the Macro Deck app.</p>
+          <p><b>PC Link:</b> install KDE Connect for Windows, put both devices on the same network, then approve pairing on both.</p>
+          <p class="hint">The prepared Foundry and Roll20 control layouts remain PC-neutral until then.</p>
+          <div class="inline"><button class="action" data-url="gmdeck://macrodeck">Macro Deck</button><button class="action" data-url="gmdeck://kdeconnect">PC Link</button><button class="action" data-url="gmdeck://settings">Android Settings</button></div>
+          <details style="margin-top:10px"><summary><b>Backup / import configuration</b></summary><textarea id="configBox" placeholder="Generate a backup or paste one here"></textarea><div class="inline"><button class="action" id="exportConfig">Generate backup</button><button class="action danger" id="importConfig">Import</button></div></details>
+          <details style="margin-top:10px"><summary><b>About GM Deck 3.1</b></summary><p class="credit">Built locally for this device. Material interface icons © Google, Apache License 2.0. D&amp;D 5e SRD data is provided by the open-source 5e SRD API; game content is used under its applicable open license. Pathfinder references open the official Archives of Nethys. Macro Deck and KDE Connect remain their respective projects.</p><button class="action" data-url="https://www.dnd5eapi.co/">5e SRD API</button> <button class="action" data-url="https://developers.google.com/fonts/docs/material_symbols">Icon credits</button></details>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer id="controlStrip"><span id="stripCampaign">Main Campaign</span><select id="sessionMode" aria-label="Session mode"><option value="prep">Prep</option><option value="exploration">Explore</option><option value="combat">Combat</option><option value="roleplay">Roleplay</option><option value="break">Break</option><option value="wrap">Wrap-up</option></select><button id="sceneControl" aria-label="Open Scene Director">🎬 <span id="stripScene">Scene</span></button><button id="turnControl" aria-label="Open current turn controls"><span id="turnAvatar" class="turn-avatar">—</span><span id="stripCombat">R1 · Empty</span></button><button id="diceControl" aria-label="Open quick dice">🎲 <span id="stripDice">—</span></button><button data-local-page="sounds" aria-label="Open background audio"><span id="stripAudio">♫ Silent</span></button><button data-local-page="session" aria-label="Open scene timer"><span id="stripTimer">00:00</span></button><button id="helpButton" aria-label="Help for this screen">ⓘ</button><span style="flex:1"></span><button id="stripStop" aria-label="Stop all audio">Stop</button></footer>
+  <div id="viewPanel"><b style="color:var(--gold)">Choose interface</b><button class="action view-choice" data-view-choice="dm"><strong>DM View</strong><span class="hint">VTT, combat, scenes and session control</span></button><button class="action view-choice" data-view-choice="player"><strong>Player View</strong><span class="hint">Character, rolls, conditions and turn status</span></button></div>
+  <div id="turnPanel"><div class="inline" style="justify-content:space-between"><span><span id="turnPanelName">No active combatant</span><br><span id="turnPanelMeta" class="hint">Round 1</span></span><span id="turnPanelHp">HP —</span></div><div class="inline" style="margin-top:8px"><button class="action" id="quickPrev">Previous</button><button class="action" id="quickHpDown">HP −</button><button class="action" id="quickHpUp">HP +</button><button class="action green" id="quickNext">End turn</button><button class="action" data-local-page="initiative" id="openCombat">Combat</button></div></div>
+  <div id="dicePanel"><div class="quick-dice"><button class="die" data-quick-die="4">d4</button><button class="die" data-quick-die="6">d6</button><button class="die" data-quick-die="8">d8</button><button class="die" data-quick-die="10">d10</button><button class="die" data-quick-die="12">d12</button><button class="die" data-quick-die="20">d20</button><button class="die" data-quick-die="100">d100</button></div><div class="inline" style="margin-top:7px"><button class="action" id="quickModDown">Mod −</button><b id="quickModifier">+0</b><button class="action" id="quickModUp">Mod +</button><button class="action" id="quickAdv">Adv d20</button><button class="action" id="quickDis">Dis d20</button><button class="action" id="repeatRoll">Repeat</button><output id="quickDiceResult">—</output><button class="action" data-local-page="dice">Full dice</button></div></div>
+  <div id="scenePanel"><div class="inline" style="justify-content:space-between"><span><b style="color:var(--gold);font-size:17px">Scene Director</b><span id="sceneSummary" class="hint" style="margin-left:8px">Choose a scene</span></span><button class="action" id="closeScene">Close</button></div><div id="scenePresets" class="scene-grid"></div><details id="sceneEditor" style="margin-top:8px"><summary><b>Customize scene presets</b></summary><div class="scene-editor-grid"><label>Preset<select id="sceneEditSelect"></select></label><label>Name<input id="sceneName" type="text" maxlength="18"></label><label>Mode<select id="sceneMode"><option value="prep">Prep</option><option value="exploration">Explore</option><option value="combat">Combat</option><option value="roleplay">Roleplay</option><option value="break">Break</option><option value="wrap">Wrap-up</option></select></label><label>Open<select id="scenePage"><option value="home">VTT</option><option value="initiative">Combat</option><option value="sounds">Audio</option><option value="session">Session</option><option value="reference">Library</option><option value="dice">Dice</option></select></label><label>Timer<input id="sceneMinutes" type="number" min="0" max="180" value="0"></label></div><div class="scene-layers"><span class="hint">Ambience</span><label><input type="checkbox" data-scene-layer="rain">Rain</label><label><input type="checkbox" data-scene-layer="tavern">Tavern</label><label><input type="checkbox" data-scene-layer="dungeon">Dungeon</label><label><input type="checkbox" data-scene-layer="forest">Forest</label><label><input type="checkbox" data-scene-layer="campfire">Campfire</label><button class="action green" id="saveScene">Save preset</button></div></details></div>
+  <div id="helpPanel"><div class="inline" style="justify-content:space-between"><span id="helpTitle">GM Deck help</span><button class="action" id="closeHelp">Close</button></div><p id="helpText" style="margin:8px 0 0"></p></div>
+  <div id="welcome" class="welcome"><div class="welcome-card"><h2>Welcome to GM Deck 3.1</h2><p>The new <b>Scene Director</b> and dedicated <b>DM / Player views</b> turn this into a complete table-side console. Existing campaign data is preserved.</p><div class="welcome-grid"><div><b>DM View</b>VTT, combat, scenes and session control.</div><div><b>Player View</b>Character, rolls, conditions and turn status.</div><div><b>Two taps</b>Switch roles from the top-left control.</div></div><div class="inline"><button class="action primary" id="welcomeScenes">Open Scene Director</button><button class="action green" id="welcomeDone">Use the deck</button></div></div></div>
+  <div id="toast"></div>
+  <script>
+    const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+    const save = (k,v) => localStorage.setItem(k, JSON.stringify(v));
+    const load = (k,d) => { try { const v=JSON.parse(localStorage.getItem(k)); return v===null?d:v; } catch(e) { return d; } };
+    const defaultModules={dice:true,combat:true,library:true,audio:true,session:true};
+    const defaultScenes=()=>[
+      {id:'prep',icon:'🎒',name:'Prep',mode:'prep',page:'session',layers:[],minutes:0},
+      {id:'explore',icon:'🧭',name:'Explore',mode:'exploration',page:'home',layers:['forest','rain'],minutes:0},
+      {id:'roleplay',icon:'🎭',name:'Roleplay',mode:'roleplay',page:'session',layers:['tavern','campfire'],minutes:0},
+      {id:'combat',icon:'⚔',name:'Combat',mode:'combat',page:'initiative',layers:['dungeon'],minutes:0},
+      {id:'boss',icon:'♛',name:'Boss Battle',mode:'combat',page:'initiative',layers:['dungeon','rain','campfire'],minutes:0},
+      {id:'break',icon:'☕',name:'Break',mode:'break',page:'sounds',layers:['campfire'],minutes:10}
+    ];
+    const tileNames={foundry:'Foundry',roll20:'Roll20',characters:'Characters',macrodeck:'Macro Deck',aon:'Archives',dndrules:'D&D Rules',audio:'Audio Deck',pclink:'PC Link',nexus:'PF Nexus',pathbuilder:'Pathbuilder',discord:'Discord',ambience:'Ambience',browser:'Browser',settings:'Settings'};
+    const legacyLinks=load('vttLinks',{foundry:'',roll20:'https://app.roll20.net/campaigns/search'});
+    let appState=load('appState',null);
+    if(!appState||!appState.campaigns){appState={activeCampaign:'main',campaigns:{main:{name:'Main Campaign',system:'both',vtt:'both',links:legacyLinks,theme:load('theme','gold'),mode:'prep',modules:{...defaultModules},hiddenTiles:[],ambience:{layers:[],volume:45},scenes:defaultScenes(),activeScene:null}}};save('appState',appState);}
+    function profile(){return appState.campaigns[appState.activeCampaign];}
+    function stateKey(base){return base+':'+appState.activeCampaign;}
+    function persistApp(){save('appState',appState);}
+    let sceneMigration=false;Object.values(appState.campaigns).forEach(p=>{if(!Array.isArray(p.scenes)||!p.scenes.length){p.scenes=defaultScenes();p.activeScene=null;sceneMigration=true;}});if(!['dm','player'].includes(appState.viewMode)){appState.viewMode='dm';sceneMigration=true;}if(sceneMigration)persistApp();
+    let toastTimer;function toast(message){$('#toast').textContent=message;$('#toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('#toast').classList.remove('show'),1800);}
+    let activePage='home';
+    function showPage(id){const target=$('#'+id);if(!target||target.dataset.disabled==='true')id=appState.viewMode==='player'?'player':'home';activePage=id;$$('nav button,.page').forEach(x=>x.classList.remove('active'));const tab=$$('nav button').find(b=>b.dataset.page===id);if(tab)tab.classList.add('active');$('#'+id).classList.add('active');$('main').scrollTop=0;if($('#turnPanel'))$('#turnPanel').classList.remove('show');if($('#dicePanel'))$('#dicePanel').classList.remove('show');if($('#helpPanel'))$('#helpPanel').classList.remove('show');if($('#scenePanel'))$('#scenePanel').classList.remove('show');if($('#viewPanel'))$('#viewPanel').classList.remove('show');}
+    $$('nav button').forEach(b=>b.onclick=()=>showPage(b.dataset.page));
+    $$('[data-local-page]').forEach(b=>b.onclick=()=>showPage(b.dataset.localPage));
+    $$('[data-url]').forEach(b=>b.onclick=()=>location.href=b.dataset.url);
+    function applyView(){const player=appState.viewMode==='player';document.body.dataset.view=player?'player':'dm';$('#viewSwitch').textContent=player?'PLAYER ▾':'DM VIEW ▾';$('#sessionMode').style.display=player?'none':'';$('#sceneControl').style.display=player?'none':'';const timerButton=$('[data-local-page="session"]');if(timerButton)timerButton.style.display=player?'none':'';['#quickPrev','#quickHpDown','#quickHpUp','#quickNext'].forEach(id=>$(id).style.display=player?'none':'');$('#openCombat').textContent=player?'Character':'Combat';if(player&&['home','initiative','session'].includes(activePage))showPage('player');if(!player&&activePage==='player')showPage('home');}
+    function setView(mode){appState.viewMode=mode;persistApp();applyView();showPage(mode==='player'?'player':'home');toast(mode==='player'?'Player View ready':'DM View ready');}
+    $('#viewSwitch').onclick=()=>{$('#turnPanel').classList.remove('show');$('#dicePanel').classList.remove('show');$('#helpPanel').classList.remove('show');$('#scenePanel').classList.remove('show');$('#viewPanel').classList.toggle('show');};$$('[data-view-choice]').forEach(b=>b.onclick=()=>setView(b.dataset.viewChoice));
+    let vttLinks=profile().links||legacyLinks;
+    $$('[data-vtt]').forEach(b=>b.onclick=()=>{const url=vttLinks[b.dataset.vtt];if(url){location.href=url;}else{showPage('setup');$('#saveStatus').textContent='Add the '+b.dataset.vtt+' address, then save the profile.';}});
+    const tick=()=>$('#clock').textContent=new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}); tick(); setInterval(tick,30000);
+    function networkStatus(){const online=navigator.onLine;$('#networkDot').classList.toggle('online',online);$('#networkText').textContent=online?'Online':'Offline';}
+    addEventListener('online',networkStatus);addEventListener('offline',networkStatus);networkStatus();
+
+    const modulePages={dice:'dice',combat:'initiative',library:'reference',audio:'sounds',session:'session'};
+    function applyLayout(){
+      const p=profile();p.modules={...defaultModules,...(p.modules||{})};p.hiddenTiles=p.hiddenTiles||[];
+      Object.entries(modulePages).forEach(([key,page])=>{const tab=$$('nav button').find(b=>b.dataset.page===page),section=$('#'+page),visible=!!p.modules[key];if(tab)tab.style.display=visible?'':'none';if(section)section.dataset.disabled=visible?'false':'true';});
+      $$('[data-tile]').forEach(tile=>{const system=tile.dataset.system,systemOk=!system||p.system==='both'||p.system===system,vttOk=(tile.dataset.tile!=='foundry'||p.vtt!=='roll20')&&(tile.dataset.tile!=='roll20'||p.vtt!=='foundry');tile.style.display=systemOk&&vttOk&&!p.hiddenTiles.includes(tile.dataset.tile)?'':'none';});
+      document.body.dataset.theme=p.theme||'gold';$('#stripCampaign').textContent=p.name||'Campaign';$('#stripCampaign').title=p.name||'Campaign';$('#sessionMode').value=p.mode||'prep';
+    }
+    applyLayout();
+    applyView();
+    const sceneModes={prep:'Prep',exploration:'Explore',combat:'Combat',roleplay:'Roleplay',break:'Break',wrap:'Wrap-up'};
+    const scenePages={home:'VTT',initiative:'Combat',sounds:'Audio',session:'Session',reference:'Library',dice:'Dice'};
+    const validSceneLayers=['rain','tavern','dungeon','forest','campfire'];
+    function ensureScenes(){const p=profile(),defaults=defaultScenes();p.scenes=(Array.isArray(p.scenes)?p.scenes:[]).slice(0,6).map((s,i)=>{const d=defaults[i]||defaults[0];return {...d,...s,id:d.id,icon:d.icon,layers:(Array.isArray(s.layers)?s.layers:[]).filter(x=>validSceneLayers.includes(x)).slice(0,3)};});while(p.scenes.length<defaults.length)p.scenes.push(defaults[p.scenes.length]);if(!p.scenes.some(s=>s.id===p.activeScene))p.activeScene=null;return p.scenes;}
+    function sceneDescription(s){const ambience=s.layers.length?s.layers.map(x=>x[0].toUpperCase()+x.slice(1)).join(' + '):'Quiet';return (sceneModes[s.mode]||'Prep')+' · '+ambience+(s.minutes?' · '+s.minutes+'m':'');}
+    function loadSceneEditor(){const scene=ensureScenes().find(s=>s.id===$('#sceneEditSelect').value)||ensureScenes()[0];$('#sceneEditSelect').value=scene.id;$('#sceneName').value=scene.name;$('#sceneMode').value=scene.mode;$('#scenePage').value=scene.page;$('#sceneMinutes').value=scene.minutes||0;$$('[data-scene-layer]').forEach(c=>c.checked=scene.layers.includes(c.dataset.sceneLayer));}
+    function renderSceneDirector(){const p=profile(),scenes=ensureScenes(),selected=$('#sceneEditSelect').value||scenes[0].id;$('#scenePresets').innerHTML=scenes.map(s=>'<button class="scene-card '+(s.id===p.activeScene?'active':'')+'" data-scene="'+s.id+'" aria-label="Run '+escapeHtml(s.name)+' scene"><strong>'+(s.id===p.activeScene?'✓ ':'')+s.icon+' '+escapeHtml(s.name)+'</strong><small>'+escapeHtml(sceneDescription(s))+'</small></button>').join('');$$('[data-scene]').forEach(b=>b.onclick=()=>applyScene(b.dataset.scene));$('#sceneEditSelect').innerHTML=scenes.map(s=>'<option value="'+s.id+'">'+escapeHtml(s.name)+'</option>').join('');$('#sceneEditSelect').value=scenes.some(s=>s.id===selected)?selected:scenes[0].id;const active=scenes.find(s=>s.id===p.activeScene);$('#stripScene').textContent=active?active.name:'Scene';$('#sceneControl').title=active?'Active scene: '+active.name:'Open Scene Director';$('#sceneSummary').textContent=active?'Active: '+active.name:'Choose a one-tap scene';loadSceneEditor();}
+    function clearActiveScene(){if(profile().activeScene){profile().activeScene=null;persistApp();renderSceneDirector();}}
+    function applyScene(id){const p=profile(),scene=ensureScenes().find(s=>s.id===id);if(!scene)return;p.mode=scene.mode;p.activeScene=scene.id;$('#sessionMode').value=scene.mode;ambientState={layers:[...scene.layers],volume:(p.ambience&&p.ambience.volume)||45};p.ambience=ambientState;if(window.GMDeck&&GMDeck.startAmbient&&ambientState.layers.length)GMDeck.startAmbient(ambientState.layers.join(','),ambientState.volume);else if(window.GMDeck&&GMDeck.stopAmbient)GMDeck.stopAmbient();timerEnd=scene.minutes?Date.now()+scene.minutes*60000:0;save(stateKey('timerEnd'),timerEnd);persistApp();renderAmbient();renderTimer();renderSceneDirector();showPage(scene.page);toast(scene.name+' scene ready');}
+    $('#sceneControl').onclick=()=>{$('#turnPanel').classList.remove('show');$('#dicePanel').classList.remove('show');$('#helpPanel').classList.remove('show');$('#scenePanel').classList.toggle('show');};$('#closeScene').onclick=()=>$('#scenePanel').classList.remove('show');$('#sceneEditSelect').onchange=loadSceneEditor;
+    $('#saveScene').onclick=()=>{const scene=ensureScenes().find(s=>s.id===$('#sceneEditSelect').value);if(!scene)return;const name=$('#sceneName').value.trim();if(!name){toast('Give this scene a name');return;}scene.name=name.slice(0,18);scene.mode=$('#sceneMode').value;scene.page=$('#scenePage').value;scene.minutes=Math.max(0,Math.min(180,+$('#sceneMinutes').value||0));scene.layers=$$('[data-scene-layer]:checked').map(c=>c.dataset.sceneLayer).slice(0,3);persistApp();renderSceneDirector();toast('Scene preset saved');};
+    renderSceneDirector();
+    $('#sessionMode').onchange=()=>{const mode=$('#sessionMode').value;clearActiveScene();profile().mode=mode;persistApp();const pages={prep:'session',exploration:'home',combat:'initiative',roleplay:'session',break:'sounds',wrap:'session'};showPage(pages[mode]);toast(mode[0].toUpperCase()+mode.slice(1)+' mode');};
+    const helpContent={home:['VTT command centre','Tiles are filtered by the active campaign system/VTT. Hide any tile under Setup → Appearance and visible tools. The footer Scene button runs campaign presets.'],player:['Player dashboard','Character HP, resources, modifiers, conditions and notes are saved per campaign. The turn card follows the shared initiative tracker. Use the view button at top left to return to DM View in two taps.'],dice:['Dice','Tap a die for an instant roll. Modifier affects quick rolls; formulas accept forms such as 2d6+3. The footer dice opens the same essentials from every screen.'],initiative:['Initiative','Blue badges are players/allies; red badges are foes. The active combatant stays fixed even when the list sorts. Tap the footer turn badge anywhere for HP and turn controls.'],reference:['Library','Search open 5e SRD entries, favourite them, and use cached cards offline. Monsters can be added directly to initiative with HP and a rolled Dexterity-based initiative.'],sounds:['Audio','Effects are one-shot and local. Select up to three ambience layers; their separate volume persists and native audio continues behind other apps. Browser soundpads may pause when hidden.'],session:['Session','Checklist, notes, counters, prompts, timer and safety state are isolated per campaign. Scene Director can set mode, ambience, timer and destination together.'],setup:['Setup','Profiles isolate links, sessions, combat, layout, ambience and editable scene presets. Module/tile switches apply immediately. Backup text contains local campaign settings and URLs—store it privately.']};
+    function openHelp(){const h=helpContent[activePage]||helpContent.home;$('#helpTitle').textContent=h[0];$('#helpText').textContent=h[1];$('#turnPanel').classList.remove('show');$('#dicePanel').classList.remove('show');$('#helpPanel').classList.add('show');}
+    $('#helpButton').onclick=openHelp;$('#closeHelp').onclick=()=>$('#helpPanel').classList.remove('show');
+
+    let history=load('diceHistory',[]);
+    const rnd=s=>Math.floor(Math.random()*s)+1;
+    function showRoll(total,label){ $('#result').innerHTML=total+'<small>'+label+'</small>';$('#stripDice').textContent=total;$('#quickDiceResult').textContent=total;history.unshift(total+'  '+label); history=history.slice(0,12); save('diceHistory',history); renderHistory(); }
+    function renderHistory(){ $('#history').textContent=history.join('   •   '); }
+    renderHistory();
+    $$('.die').forEach(b=>b.onclick=()=>{ if(b.dataset.special){ showRoll(Math.random()<.5?'Heads':'Tails','coin'); return; } const s=+b.dataset.die,m=+$('#modifier').value||0,r=rnd(s); showRoll(r+m,'d'+s+(m?((m>0?'+':'')+m):'')+' ['+r+']'); });
+    $('#adv').onclick=()=>{ const a=rnd(20),b=rnd(20),m=+$('#modifier').value||0; showRoll(Math.max(a,b)+m,'adv ['+a+', '+b+']'); };
+    $('#dis').onclick=()=>{ const a=rnd(20),b=rnd(20),m=+$('#modifier').value||0; showRoll(Math.min(a,b)+m,'dis ['+a+', '+b+']'); };
+    $('#rollFormula').onclick=()=>{ const raw=$('#formula').value.trim().replace(/\s/g,''); const m=raw.match(/^(\d{1,2})d(\d{1,3})([+-]\d{1,3})?$/i); if(!m){ showRoll('?', 'use 2d6+3'); return; } const n=Math.min(+m[1],50),s=Math.min(+m[2],1000),mod=+(m[3]||0),rolls=[]; for(let i=0;i<n;i++) rolls.push(rnd(s)); showRoll(rolls.reduce((a,b)=>a+b,0)+mod,raw+' ['+rolls.join(',')+']'); };
+    $('#clearHistory').onclick=()=>{ history=[]; save('diceHistory',history); renderHistory(); $('#result').textContent='—'; };
+    let quickMod=+$('#modifier').value||0,lastQuickRoll=null;
+    function renderQuickMod(){$('#quickModifier').textContent=(quickMod>=0?'+':'')+quickMod;$('#modifier').value=quickMod;}$('#modifier').oninput=()=>{quickMod=+$('#modifier').value||0;$('#quickModifier').textContent=(quickMod>=0?'+':'')+quickMod;};
+    function quickDie(s){const run=()=>{const r=rnd(s);showRoll(r+quickMod,'d'+s+(quickMod?(quickMod>0?'+':'')+quickMod:'')+' ['+r+']');};lastQuickRoll=run;run();}
+    $$('[data-quick-die]').forEach(b=>b.onclick=()=>quickDie(+b.dataset.quickDie));
+    $('#quickModDown').onclick=()=>{quickMod--;renderQuickMod();};$('#quickModUp').onclick=()=>{quickMod++;renderQuickMod();};
+    $('#quickAdv').onclick=()=>{const run=()=>{const a=rnd(20),b=rnd(20);showRoll(Math.max(a,b)+quickMod,'adv ['+a+', '+b+']');};lastQuickRoll=run;run();};
+    $('#quickDis').onclick=()=>{const run=()=>{const a=rnd(20),b=rnd(20);showRoll(Math.min(a,b)+quickMod,'dis ['+a+', '+b+']');};lastQuickRoll=run;run();};
+    $('#repeatRoll').onclick=()=>{if(lastQuickRoll)lastQuickRoll();else quickDie(20);};
+    $('#diceControl').onclick=()=>{$('#turnPanel').classList.remove('show');$('#dicePanel').classList.toggle('show');};renderQuickMod();
+
+    const emptyCombat={round:1,current:0,entries:[]};
+    let combat=load(stateKey('combat'),appState.activeCampaign==='main'?load('combat',emptyCombat):emptyCombat);
+    function initials(name){return String(name||'—').trim().split(/\s+/).slice(0,2).map(x=>x[0]).join('').toUpperCase();}
+    function normalizeCombat(){combat.entries.forEach((e,i)=>{if(!e.id)e.id='c'+Date.now().toString(36)+i+Math.random().toString(36).slice(2,5);if(!e.side)e.side='foe';if(!Number.isFinite(e.maxHp))e.maxHp=0;if(!Number.isFinite(e.hp))e.hp=e.maxHp;});const selected=combat.currentId||(combat.entries[combat.current]&&combat.entries[combat.current].id);combat.entries.sort((a,b)=>b.score-a.score);let index=combat.entries.findIndex(e=>e.id===selected);if(index<0)index=Math.min(combat.current||0,Math.max(0,combat.entries.length-1));combat.current=index;combat.currentId=combat.entries[index]?combat.entries[index].id:null;}
+    function currentCombatant(){return combat.entries[combat.current]||null;}
+    function renderTurnControl(){const current=currentCombatant(),next=combat.entries.length>1?combat.entries[(combat.current+1)%combat.entries.length]:null,avatar=$('#turnAvatar'),turnText='R'+combat.round+' · '+(current?current.name:'Empty');avatar.textContent=current?initials(current.name):'—';avatar.classList.toggle('foe',!!current&&current.side==='foe');$('#stripCombat').textContent=turnText;$('#turnControl').title=turnText;$('#turnPanelName').textContent=current?current.name:'No active combatant';$('#turnPanelMeta').textContent='Round '+combat.round+(current?' · Initiative '+current.score+' · '+(current.side==='player'?'Player / ally':'Foe'):'');$('#turnPanelHp').textContent=current?'HP '+current.hp+'/'+current.maxHp:'HP —';$('#playerNow').innerHTML=current?'Now: <b>'+escapeHtml(current.name)+'</b>'+(next?' · Next: '+escapeHtml(next.name):''):'No active combatant';}
+    function renderInit(){normalizeCombat();$('#round').textContent='Round '+combat.round;$('#initList').innerHTML=combat.entries.map((e,i)=>'<li class="'+(i===combat.current?'current':'')+'"><span class="score">'+e.score+'</span><span class="inline"><span class="turn-avatar '+(e.side==='foe'?'foe':'')+'">'+initials(e.name)+'</span>'+escapeHtml(e.name)+'</span><span class="hpbox"><button data-hp="'+i+'" data-hpdelta="-5">−5</button><button data-hp="'+i+'" data-hpdelta="-1">−</button><span>'+e.hp+'/'+e.maxHp+'</span><button data-hp="'+i+'" data-hpdelta="1">+</button><button data-hp="'+i+'" data-hpdelta="5">+5</button></span><button class="remove" data-remove="'+i+'">×</button></li>').join('')||'<li><span></span><span class="hint">No combatants yet</span><span></span><span></span></li>';$$('[data-hp]').forEach(b=>b.onclick=()=>{const e=combat.entries[+b.dataset.hp];e.hp=Math.max(0,e.hp+(+b.dataset.hpdelta));saveCombat();});$$('[data-remove]').forEach(b=>b.onclick=()=>{const removed=combat.entries.splice(+b.dataset.remove,1)[0];saveCombat();toast(removed.name+' removed');});renderTurnControl();save(stateKey('combat'),combat);}
+    function saveCombat(){ save(stateKey('combat'),combat); renderInit(); }
+    function addInit(name,score,hp,side='foe'){if(!name)return;const max=Math.max(0,+hp||0);combat.entries.push({name,score:+score||0,hp:max,maxHp:max,side});saveCombat();toast(name+' added to combat');}
+    function moveTurn(delta){if(!combat.entries.length)return;normalizeCombat();let next=combat.current+delta;if(next>=combat.entries.length){next=0;combat.round++;}if(next<0){next=combat.entries.length-1;combat.round=Math.max(1,combat.round-1);}combat.current=next;combat.currentId=combat.entries[next].id;saveCombat();toast(combat.entries[next].name+' is up');}
+    $('#addInit').onclick=()=>{addInit($('#initName').value,$('#initScore').value,$('#initHp').value,$('#initSide').value);$('#initName').value='';$('#initScore').value='';$('#initHp').value='';};
+    $('#nextTurn').onclick=()=>moveTurn(1);$('#prevTurn').onclick=()=>moveTurn(-1);
+    $('#clearInit').onclick=()=>{if(confirm('Clear initiative and reset to round 1?')){combat={round:1,current:0,currentId:null,entries:[]};saveCombat();}};
+    $('#rollParty').onclick=()=>{for(let i=1;i<=4;i++)addInit('Foe '+i,rnd(20),10+rnd(20),'foe');};
+    $('#turnControl').onclick=()=>{$('#dicePanel').classList.remove('show');$('#turnPanel').classList.toggle('show');};
+    $('#quickNext').onclick=()=>moveTurn(1);$('#quickPrev').onclick=()=>moveTurn(-1);
+    $('#quickHpDown').onclick=()=>{const e=currentCombatant();if(e){e.hp=Math.max(0,e.hp-1);saveCombat();}};$('#quickHpUp').onclick=()=>{const e=currentCombatant();if(e){e.hp++;saveCombat();}};
+    $('#openCombat').onclick=()=>{$('#turnPanel').classList.remove('show');showPage(appState.viewMode==='player'?'player':'initiative');};
+    renderInit();
+
+    const emptyPlayer={name:'',characterClass:'',hp:0,maxHp:0,ac:10,speed:25,level:1,resource:0,notes:'',attack:0,check:0,save:0,initiative:0,conditions:[]};
+    let playerState={...emptyPlayer,...load(stateKey('player'),emptyPlayer)};playerState.conditions=Array.isArray(playerState.conditions)?playerState.conditions:[];
+    function savePlayer(){save(stateKey('player'),playerState);renderPlayer();}
+    function renderPlayer(){$('#playerName').value=playerState.name||'';$('#playerClass').value=playerState.characterClass||'';$('#playerMaxHp').value=playerState.maxHp||0;$('#playerAc').value=playerState.ac||0;$('#playerSpeed').value=playerState.speed||0;$('#playerLevel').value=playerState.level||1;$('#playerHp').textContent=(playerState.hp||0)+' / '+(playerState.maxHp||0);$('#playerResource').textContent=playerState.resource||0;$('#playerNotes').value=playerState.notes||'';['attack','check','save','initiative'].forEach(k=>$('#player'+k[0].toUpperCase()+k.slice(1)).value=playerState[k]||0);$$('.player-condition').forEach(b=>b.classList.toggle('active',playerState.conditions.includes(b.dataset.playerCondition)));}
+    const playerConditionNames=['Frightened','Poisoned','Prone','Stunned','Dying','Wounded','Concentrating','Hidden'];
+    $('#playerConditions').innerHTML=playerConditionNames.map(x=>'<button class="chip player-condition" data-player-condition="'+x+'">'+x+'</button>').join('');
+    $('#playerName').oninput=()=>{playerState.name=$('#playerName').value;save(stateKey('player'),playerState);};$('#playerClass').oninput=()=>{playerState.characterClass=$('#playerClass').value;save(stateKey('player'),playerState);};$('#playerNotes').oninput=()=>{playerState.notes=$('#playerNotes').value;save(stateKey('player'),playerState);};
+    $('#playerMaxHp').onchange=()=>{const oldMax=playerState.maxHp||0,newMax=Math.max(0,+$('#playerMaxHp').value||0);playerState.maxHp=newMax;playerState.hp=oldMax===0&&playerState.hp===0?newMax:Math.min(playerState.hp,newMax);savePlayer();};
+    [['playerAc','ac'],['playerSpeed','speed'],['playerLevel','level'],['playerAttack','attack'],['playerCheck','check'],['playerSave','save'],['playerInitiative','initiative']].forEach(([id,key])=>$('#'+id).onchange=()=>{playerState[key]=+$('#'+id).value||0;savePlayer();});
+    $$('[data-player-hp]').forEach(b=>b.onclick=()=>{playerState.hp=Math.max(0,Math.min(playerState.maxHp||0,playerState.hp+(+b.dataset.playerHp)));savePlayer();});$$('[data-player-resource]').forEach(b=>b.onclick=()=>{playerState.resource=Math.max(0,Math.min(3,playerState.resource+(+b.dataset.playerResource)));savePlayer();});
+    $$('[data-player-roll]').forEach(b=>b.onclick=()=>{const key=b.dataset.playerRoll,mod=+playerState[key]||0,roll=rnd(20);showRoll(roll+mod,key[0].toUpperCase()+key.slice(1)+' d20 '+(mod>=0?'+':'')+mod+' ['+roll+']');toast(key[0].toUpperCase()+key.slice(1)+' rolled');});
+    $$('[data-player-condition]').forEach(b=>b.onclick=()=>{const name=b.dataset.playerCondition,i=playerState.conditions.indexOf(name);if(i>=0)playerState.conditions.splice(i,1);else playerState.conditions.push(name);savePlayer();});renderPlayer();
+
+    const conditions=['Blinded','Charmed','Confused','Dazed','Deafened','Doomed','Drained','Dying','Encumbered','Enfeebled','Fascinated','Fatigued','Flat-Footed','Fleeing','Frightened','Grabbed','Hidden','Immobilized','Invisible','Paralyzed','Persistent Damage','Petrified','Poisoned','Prone','Quickened','Restrained','Sickened','Slowed','Stunned','Unconscious','Wounded'];
+    $('#conditionChips').innerHTML=conditions.map(x=>'<span class="chip">'+x+'</span>').join('');
+    $('#searchPf2').onclick=()=>{const q=$('#libraryQuery').value.trim();location.href=q?'https://2e.aonprd.com/Search.aspx?q='+encodeURIComponent(q):'https://2e.aonprd.com/';};
+    $('#searchDnd').onclick=()=>{const q=$('#libraryQuery').value.trim();location.href=q?'https://www.dndbeyond.com/search?q='+encodeURIComponent(q):'https://www.dndbeyond.com/';};
+
+    const srdBase='https://www.dnd5eapi.co';
+    let srdItems=[],currentSrd=null,srdCache=load('srdCache',{}),srdFavorites=load('srdFavorites',[]);
+    function srdSummary(d){
+      const bits=[];
+      if(d.size||d.type||d.alignment)bits.push([d.size,d.type,d.alignment].filter(Boolean).join(' • '));
+      if(d.armor_class)bits.push('AC '+(Array.isArray(d.armor_class)?d.armor_class.map(x=>x.value).join('/'):d.armor_class));
+      if(d.hit_points!=null)bits.push('HP '+d.hit_points+(d.hit_dice?' ('+d.hit_dice+')':''));
+      if(d.level!=null)bits.push('Level '+d.level+(d.school&&d.school.name?' '+d.school.name:''));
+      if(d.casting_time)bits.push('Cast '+d.casting_time); if(d.range)bits.push('Range '+d.range);
+      if(d.duration)bits.push('Duration '+d.duration);if(d.challenge_rating!=null)bits.push('CR '+d.challenge_rating);
+      if(d.equipment_category&&d.equipment_category.name)bits.push(d.equipment_category.name);
+      if(d.cost&&d.cost.quantity!=null)bits.push('Cost '+d.cost.quantity+' '+d.cost.unit);
+      const desc=Array.isArray(d.desc)?d.desc.join(' '):(d.desc||'');
+      const abilities=d.strength!=null?'<div class="hint">STR '+d.strength+' · DEX '+d.dexterity+' · CON '+d.constitution+' · INT '+d.intelligence+' · WIS '+d.wisdom+' · CHA '+d.charisma+'</div>':'';
+      return '<h3>'+escapeHtml(d.name||'SRD result')+'</h3>'+(bits.length?'<b>'+escapeHtml(bits.join(' · '))+'</b><br>':'')+abilities+escapeHtml(desc||'Open-rule entry loaded.');
+    }
+    function renderSrdDetail(d,offline=false){currentSrd=d;const url=d.url||('/api/2014/'+($('#srdType').value||'monsters')+'/'+d.index);const favorite=srdFavorites.some(x=>x.url===url);$('#srdDetail').innerHTML=srdSummary(d)+'<div class="inline" style="margin-top:7px"><button class="action '+(favorite?'favorite':'')+'" id="favoriteSrd">'+(favorite?'★ Saved':'☆ Favourite')+'</button>'+(d.hit_points!=null?'<button class="action green" id="addSrdCombat">Add to combat</button>':'')+(offline?'<span class="hint">Offline cache</span>':'')+'</div>';$('#favoriteSrd').onclick=()=>{const i=srdFavorites.findIndex(x=>x.url===url);if(i>=0){srdFavorites.splice(i,1);toast('Removed from favourites');}else{srdFavorites.unshift({name:d.name,url});toast('Saved to favourites');}save('srdFavorites',srdFavorites);renderSrdDetail(d,offline);};if($('#addSrdCombat'))$('#addSrdCombat').onclick=()=>{const dex=Math.floor(((d.dexterity||10)-10)/2);addInit(d.name,rnd(20)+dex,d.hit_points);showPage('initiative');};save('lastSrd',{data:d});}
+    function cacheSrd(url,d){srdCache[url]=d;const keys=Object.keys(srdCache);if(keys.length>30)delete srdCache[keys[0]];save('srdCache',srdCache);}
+    async function openSrd(url){$('#srdDetail').innerHTML='<span class="hint">Loading entry…</span>';try{const r=await fetch(srdBase+url);if(!r.ok)throw Error('HTTP '+r.status);const d=await r.json();cacheSrd(url,d);renderSrdDetail(d);}catch(e){if(srdCache[url])renderSrdDetail(srdCache[url],true);else $('#srdDetail').innerHTML='<span class="danger">Could not load this entry. Check Wi-Fi and try again.</span>';}}
+    function renderSrd(items){srdItems=items.slice(0,24);$('#srdResults').innerHTML=srdItems.length?srdItems.map((x,i)=>'<button class="chip" data-srd="'+i+'">'+(srdFavorites.some(f=>f.url===x.url)?'★ ':'')+escapeHtml(x.name)+'</button>').join(''):'<span class="hint">No matching SRD entries.</span>';$$('[data-srd]').forEach(b=>b.onclick=()=>openSrd(srdItems[+b.dataset.srd].url));}
+    async function searchSrd(){const type=$('#srdType').value,q=$('#srdQuery').value.trim().toLowerCase();if(!q&&srdFavorites.length){renderSrd(srdFavorites);return;}$('#srdResults').innerHTML='<span class="hint">Searching open rules…</span>';try{let url='/api/2014/'+type;if(q&&(type==='monsters'||type==='spells'))url+='?name='+encodeURIComponent(q);const r=await fetch(srdBase+url);if(!r.ok)throw Error('HTTP '+r.status);const d=await r.json();let items=d.results||[];if(q&&type!=='monsters'&&type!=='spells')items=items.filter(x=>x.name.toLowerCase().includes(q));renderSrd(items);}catch(e){if(!q&&srdFavorites.length)renderSrd(srdFavorites);else $('#srdResults').innerHTML='<span class="danger">SRD service unavailable. Cached favourites still work.</span>';}}
+    $('#searchSrd').onclick=searchSrd;$('#srdQuery').onkeydown=e=>{if(e.key==='Enter')searchSrd();};
+    const lastSrd=load('lastSrd',null);if(lastSrd&&lastSrd.data)renderSrdDetail(lastSrd.data,true);if(srdFavorites.length)renderSrd(srdFavorites);
+
+    let audioCtx=null,activeAudio=[];
+    function ac(){if(!audioCtx)audioCtx=new (window.AudioContext||window.webkitAudioContext)();return audioCtx;}
+    function tone(freq,duration,type='sine',volume=.13,delay=0,endFreq=freq){const c=ac(),o=c.createOscillator(),g=c.createGain(),t=c.currentTime+delay;o.type=type;o.frequency.setValueAtTime(freq,t);o.frequency.exponentialRampToValueAtTime(Math.max(20,endFreq),t+duration);g.gain.setValueAtTime(.001,t);g.gain.exponentialRampToValueAtTime(volume,t+.015);g.gain.exponentialRampToValueAtTime(.001,t+duration);o.connect(g).connect(c.destination);o.start(t);o.stop(t+duration+.02);activeAudio.push(o);}
+    function noise(duration=.8,volume=.18,delay=0,low=500){const c=ac(),len=Math.floor(c.sampleRate*duration),buf=c.createBuffer(1,len,c.sampleRate),d=buf.getChannelData(0);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*(1-i/len);const s=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain(),t=c.currentTime+delay;s.buffer=buf;f.type='lowpass';f.frequency.value=low;g.gain.setValueAtTime(volume,t);g.gain.exponentialRampToValueAtTime(.001,t+duration);s.connect(f).connect(g).connect(c.destination);s.start(t);activeAudio.push(s);}
+    const sound={
+      initiative(){tone(523,.22,'sine',.16);tone(659,.22,'sine',.16,.16);tone(784,.55,'sine',.18,.32);},
+      success(){tone(440,.18,'triangle');tone(554,.18,'triangle',.13,.14);tone(659,.38,'triangle',.15,.28);},
+      failure(){tone(330,.2,'sawtooth',.1);tone(247,.25,'sawtooth',.1,.16);tone(165,.5,'sawtooth',.11,.34);},
+      critical(){noise(.25,.2,0,1200);tone(110,.5,'square',.14);tone(440,.18,'sine',.15,.1);tone(880,.45,'triangle',.14,.24);},
+      thunder(){noise(1.8,.3,0,220);tone(55,1.9,'sine',.2,0,28);},
+      door(){noise(.38,.28,0,350);tone(90,.5,'sawtooth',.18,0,40);tone(48,.45,'sine',.16,.28);},
+      coins(){for(let i=0;i<9;i++)tone(900+Math.random()*1500,.08,'sine',.08,i*.055);},
+      potion(){for(let i=0;i<7;i++)tone(250+i*75,.12,'sine',.08,i*.075,380+i*90);},
+      heartbeat(){tone(62,.13,'sine',.22);tone(55,.16,'sine',.18,.19);tone(62,.13,'sine',.22,.72);tone(55,.16,'sine',.18,.91);},
+      magic(){for(let i=0;i<8;i++)tone(260+i*55,.45,'sine',.06,i*.055,620+i*70);}
+    };
+    $$('[data-sound]').forEach(b=>b.onclick=()=>sound[b.dataset.sound]());
+    $('#stopSounds').onclick=()=>{activeAudio.forEach(n=>{try{n.stop();}catch(e){}});activeAudio=[];if(audioCtx){audioCtx.close();audioCtx=null;}};
+    let ambientState=profile().ambience||{layers:[],volume:45};profile().ambience=ambientState;$('#ambientVolume').value=ambientState.volume||45;
+    function renderAmbient(){const layers=ambientState.layers||[],audioText=layers.length?'♫ '+layers.join(' + '):'♫ Silent';$$('[data-ambient-layer]').forEach(b=>b.classList.toggle('active',layers.includes(b.dataset.ambientLayer)));$('#ambientVolumeLabel').textContent=(ambientState.volume||45)+'%';$('#ambientStatus').textContent=layers.length?layers.map(x=>x[0].toUpperCase()+x.slice(1)).join(' + ')+' playing behind other apps':'Tap multiple layers to mix them.';$('#stripAudio').textContent=audioText;$('#stripAudio').title=audioText;$('#stripAudio').classList.toggle('playing',!!layers.length);}
+    function syncAmbient(){profile().ambience=ambientState;persistApp();if(window.GMDeck&&GMDeck.startAmbient&&ambientState.layers.length)GMDeck.startAmbient(ambientState.layers.join(','),ambientState.volume||45);renderAmbient();}
+    $$('[data-ambient-layer]').forEach(b=>b.onclick=()=>{clearActiveScene();const layer=b.dataset.ambientLayer,i=ambientState.layers.indexOf(layer);if(i>=0)ambientState.layers.splice(i,1);else{if(ambientState.layers.length>=3){toast('Maximum three ambience layers');return;}ambientState.layers.push(layer);}if(ambientState.layers.length)syncAmbient();else stopAmbient();});
+    $$('[data-ambient-preset]').forEach(b=>b.onclick=()=>{clearActiveScene();ambientState.layers=[b.dataset.ambientPreset];syncAmbient();showPage('sounds');toast('Background ambience started');});
+    $('#ambientVolume').oninput=()=>{ambientState.volume=+$('#ambientVolume').value;renderAmbient();};$('#ambientVolume').onchange=syncAmbient;
+    function stopAmbient(){clearActiveScene();ambientState.layers=[];profile().ambience=ambientState;persistApp();if(window.GMDeck&&GMDeck.stopAmbient)GMDeck.stopAmbient();renderAmbient();toast('Background ambience stopped');}
+    $('#stopAmbient').onclick=stopAmbient;$('#stripStop').onclick=()=>{$('#stopSounds').click();stopAmbient();};renderAmbient();if(ambientState.layers.length)syncAmbient();
+
+    const checkLabels=['Foundry / Roll20 world and scene ready','Maps, lighting and tokens checked','Character sheets and HP reviewed','Handouts / encounters queued','Voice chat and audio tested','Break reminder planned'];
+    const emptySession={checks:{},notes:'',hero:0,party:0};
+    let session=load(stateKey('session'),appState.activeCampaign==='main'?load('session',emptySession):emptySession);
+    $('#checks').innerHTML=checkLabels.map((x,i)=>'<label><input type="checkbox" data-check="'+i+'">'+x+'</label>').join('');
+    $$('[data-check]').forEach(c=>{c.checked=!!session.checks[c.dataset.check];c.onchange=()=>{session.checks[c.dataset.check]=c.checked;save(stateKey('session'),session);};});
+    $('#notes').value=session.notes||''; $('#notes').oninput=()=>{session.notes=$('#notes').value;save(stateKey('session'),session);};
+    function renderCounts(){ $('#hero').textContent=session.hero||0; $('#party').textContent=session.party||0; save(stateKey('session'),session); } renderCounts();
+    $$('[data-count]').forEach(b=>b.onclick=()=>{const k=b.dataset.count;session[k]=Math.max(0,(session[k]||0)+(+b.dataset.delta));renderCounts();});
+    const sparkData={
+      npc:['A cheerful courier hiding a royal seal','A tired healer who remembers every debt','A rival adventurer with a surprisingly fair offer','A nervous guard protecting the wrong door','A retired monster hunter who recognizes the party'],
+      place:['A flooded shrine whose bells still ring','An inn built around a petrified tree','A market that opens only during storms','A silent bridge covered in fresh footprints','A warm cave with an impossible night sky'],
+      twist:['The obvious villain is buying time for a rescue','The reward is genuine, but accepting it marks the party','An ally tells the truth for entirely wrong reasons','The locked room is meant to keep something safe inside','Victory wakes an older agreement'],
+      loot:['A brass key warm to the touch','A potion whose label changes at midnight','A map annotated by three disagreeing owners','A silver gaming piece matching a local noble','A mundane-looking rope that cannot become wet']
+    };
+    $$('[data-spark]').forEach(b=>b.onclick=()=>{const a=sparkData[b.dataset.spark],v=a[Math.floor(Math.random()*a.length)];$('#sparkOutput').textContent=v;session.spark=v;save(stateKey('session'),session);});
+    if(session.spark)$('#sparkOutput').textContent=session.spark;
+    let timerEnd=load(stateKey('timerEnd'),appState.activeCampaign==='main'?load('timerEnd',0):0),timerHandle;
+    function renderTimer(){const left=Math.max(0,Math.ceil((timerEnd-Date.now())/1000)),m=Math.floor(left/60),s=left%60,text=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');$('#sceneTimer').textContent=text;$('#stripTimer').textContent=text;if(!left&&timerEnd){timerEnd=0;save(stateKey('timerEnd'),0);sound.initiative();$('#safetyState').textContent='Time!';toast('Scene clock finished');}}
+    $$('[data-minutes]').forEach(b=>b.onclick=()=>{clearActiveScene();timerEnd=Date.now()+(+b.dataset.minutes)*60000;save(stateKey('timerEnd'),timerEnd);renderTimer();toast(b.dataset.minutes+' minute clock started');});
+    $('#stopTimer').onclick=()=>{clearActiveScene();timerEnd=0;save(stateKey('timerEnd'),0);renderTimer();};timerHandle=setInterval(renderTimer,1000);renderTimer();
+    $$('[data-safety]').forEach(b=>b.onclick=()=>{$('#safetyState').textContent=b.dataset.safety;session.safety=b.dataset.safety;save(stateKey('session'),session);toast(b.dataset.safety);});
+    if(session.safety)$('#safetyState').textContent=session.safety;
+    $('#resetSession').onclick=()=>{if(confirm('Reset this campaign session, notes, counters and initiative?')){session={...emptySession};combat={...emptyCombat};save(stateKey('session'),session);save(stateKey('combat'),combat);location.reload();}};
+    function normalizeUrl(v){v=v.trim();if(v&&!/^https?:\/\//i.test(v))v='http://'+v;return v;}
+    function renderProfileForm(){const p=profile();$('#campaignSelect').innerHTML=Object.entries(appState.campaigns).map(([id,c])=>'<option value="'+escapeHtml(id)+'">'+escapeHtml(c.name)+'</option>').join('');$('#campaignSelect').value=appState.activeCampaign;$('#campaignName').value=p.name||'';$('#gameSystem').value=p.system||'both';$('#vttChoice').value=p.vtt||'both';$('#foundryUrl').value=(p.links&&p.links.foundry)||'';$('#roll20Url').value=(p.links&&p.links.roll20)||'';$('#theme').value=p.theme||'gold';}
+    $('#campaignSelect').onchange=()=>{appState.activeCampaign=$('#campaignSelect').value;persistApp();location.reload();};
+    $('#newCampaign').onclick=()=>{const name=prompt('New campaign name','New Campaign');if(!name)return;const id='campaign-'+Date.now();appState.campaigns[id]={name,system:'both',vtt:'both',links:{foundry:'',roll20:''},theme:profile().theme||'gold',mode:'prep',modules:{...defaultModules},hiddenTiles:[],ambience:{layers:[],volume:45},scenes:defaultScenes(),activeScene:null};appState.activeCampaign=id;persistApp();location.reload();};
+    $('#deleteCampaign').onclick=()=>{if(Object.keys(appState.campaigns).length<=1){toast('Keep at least one campaign');return;}if(confirm('Delete this campaign profile and switch to another?')){delete appState.campaigns[appState.activeCampaign];appState.activeCampaign=Object.keys(appState.campaigns)[0];persistApp();location.reload();}};
+    $('#saveLinks').onclick=()=>{const p=profile();p.name=$('#campaignName').value.trim()||'Campaign';p.system=$('#gameSystem').value;p.vtt=$('#vttChoice').value;p.links={foundry:normalizeUrl($('#foundryUrl').value),roll20:normalizeUrl($('#roll20Url').value)};vttLinks=p.links;persistApp();applyLayout();renderProfileForm();$('#saveStatus').textContent='Campaign profile saved.';toast('Campaign profile saved');};
+    $('#testFoundry').onclick=()=>{const u=normalizeUrl($('#foundryUrl').value);if(u)location.href=u;};
+    $('#testRoll20').onclick=()=>{const u=normalizeUrl($('#roll20Url').value);if(u)location.href=u;};
+    $('#applyTheme').onclick=()=>{profile().theme=$('#theme').value;persistApp();applyLayout();toast('Theme applied');};
+    const moduleLabels={dice:'Dice',combat:'Combat',library:'Library',audio:'Audio',session:'Session'};
+    $('#moduleToggles').innerHTML=Object.entries(moduleLabels).map(([k,label])=>'<label><input type="checkbox" data-module-toggle="'+k+'">'+label+'</label>').join('');
+    $('#tileToggles').innerHTML=Object.entries(tileNames).map(([k,label])=>'<label><input type="checkbox" data-tile-toggle="'+k+'">'+label+'</label>').join('');
+    $$('[data-module-toggle]').forEach(c=>{c.checked=profile().modules[c.dataset.moduleToggle]!==false;c.onchange=()=>{profile().modules[c.dataset.moduleToggle]=c.checked;persistApp();applyLayout();toast(c.checked?'Module enabled':'Module hidden');};});
+    $$('[data-tile-toggle]').forEach(c=>{c.checked=!profile().hiddenTiles.includes(c.dataset.tileToggle);c.onchange=()=>{const hidden=profile().hiddenTiles,k=c.dataset.tileToggle,i=hidden.indexOf(k);if(c.checked&&i>=0)hidden.splice(i,1);if(!c.checked&&i<0)hidden.push(k);persistApp();applyLayout();};});
+    $('#exportConfig').onclick=()=>{const storage={};for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);storage[k]=localStorage.getItem(k);}$('#configBox').value=JSON.stringify({format:'gmdeck-backup-1',created:new Date().toISOString(),storage});$('#configBox').select();toast('Backup generated—copy this text');};
+    $('#importConfig').onclick=()=>{try{const data=JSON.parse($('#configBox').value);if(data.format!=='gmdeck-backup-1'||!data.storage)throw Error('format');if(!confirm('Replace GM Deck configuration with this backup?'))return;Object.entries(data.storage).forEach(([k,v])=>localStorage.setItem(k,v));location.reload();}catch(e){toast('Backup text is not valid');}};
+    renderProfileForm();
+    if(!load('onboarded31',false))$('#welcome').classList.add('show');
+    function finishWelcome(page){save('onboarded31',true);$('#welcome').classList.remove('show');showPage(page);}
+    $('#welcomeScenes').onclick=()=>{save('onboarded31',true);$('#welcome').classList.remove('show');$('#scenePanel').classList.add('show');};$('#welcomeDone').onclick=()=>finishWelcome('home');
+    function escapeHtml(s){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+  </script>
+</body>
+</html>

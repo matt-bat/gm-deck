@@ -1,0 +1,50 @@
+name: Bug report
+description: Report a reproducible GM Deck problem.
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Remove campaign URLs, tokens, pairing codes, notes, and other private information before submitting.
+  - type: input
+    id: version
+    attributes:
+      label: GM Deck version
+      placeholder: 3.1.0
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Affected surface
+      options:
+        - DM View
+        - Player View
+        - Scene Director
+        - Dice
+        - Combat / initiative
+        - Library
+        - Audio
+        - Session
+        - Setup / networking
+        - Android shell
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      placeholder: Describe the shortest sequence that reproduces the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include device, Android/Fire OS version, and relevant Windows/browser version.
