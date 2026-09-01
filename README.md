@@ -3,6 +3,7 @@
 An offline-first tabletop companion that turns a small Android display into a focused control surface for Foundry VTT, Roll20, Pathfinder, D&D, Discord, ambience, dice, initiative, and session tools.
 
 [![UI checks](https://github.com/matt-bat/gm-deck/actions/workflows/ci.yml/badge.svg)](https://github.com/matt-bat/gm-deck/actions/workflows/ci.yml)
+[![GitHub Pages](https://github.com/matt-bat/gm-deck/actions/workflows/pages.yml/badge.svg)](https://matt-bat.github.io/gm-deck/)
 [![MIT License](https://img.shields.io/badge/license-MIT-57c785.svg)](LICENSE)
 [![Support on Ko-fi](https://img.shields.io/badge/support-Ko--fi-f28c6f.svg)](https://ko-fi.com/matt0bat)
 
@@ -17,6 +18,8 @@ An offline-first tabletop companion that turns a small Android display into a fo
 | Two-tap role switcher | Scene Director |
 |:---:|:---:|
 | ![GM Deck DM and Player role switcher](screenshots/gm-deck-3.1-role-switcher.png) | ![GM Deck Scene Director presets](screenshots/gm-deck-3.1-scene-director.png) |
+
+[Open the live browser demo](https://matt-bat.github.io/gm-deck/) to try the touch interface without installing an APK. Dice, initiative, campaign profiles, character tools, and session state work in the browser and remain in that browser's local storage. Android launch shortcuts and native background ambience require the installed Android application.
 
 ## What it does
 
@@ -103,6 +106,8 @@ Report sensitive problems according to [SECURITY.md](SECURITY.md). Please do not
 ## Contributing
 
 Focused bug fixes, accessibility improvements, small-screen layout corrections, documentation, and tabletop workflow improvements are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
+
+Use [GitHub Discussions](https://github.com/matt-bat/gm-deck/discussions) for setup questions, tabletop control ideas, and examples of personal GM Deck layouts. Use an issue for a reproducible defect or a concrete feature request.
 
 ## License
 
