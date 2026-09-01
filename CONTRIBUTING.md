@@ -1,6 +1,6 @@
-# Contributing to GM Deck
+# Contributing to TTRPG Control Deck
 
-Thanks for helping improve GM Deck. Contributions are most useful when they make tabletop controls clearer, faster, more reliable, or more accessible on a small touch display.
+Thanks for helping improve TTRPG Control Deck. Contributions are most useful when they make tabletop controls clearer, faster, more reliable, or more accessible on a small touch display.
 
 ## Before opening an issue
 

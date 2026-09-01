@@ -1,6 +1,11 @@
 # Changelog
 
-All notable changes to GM Deck are recorded here.
+All notable changes to TTRPG Control Deck are recorded here.
+
+## Unreleased
+
+- Renamed the public product, repository, APK, screenshots, and setup package from GM Deck to TTRPG Control Deck.
+- Preserved the existing Android package, deep-link scheme, storage keys, and backup format for compatibility.
 
 ## 3.1.0 — 2026-08-31
 

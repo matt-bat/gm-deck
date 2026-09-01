@@ -3,7 +3,7 @@
 These are deliberately not preinstalled. Each adds value, but also adds storage,
 permissions, host-PC setup, subscriptions, or campaign-specific assumptions.
 
-GM Deck 3.1 already includes the offline soundboard, mixed background ambience,
+TTRPG Control Deck 3.1 already includes the offline soundboard, mixed background ambience,
 quick/full dice, initiative and HP tracking, current-turn footer, campaign profiles,
 session tools, open-rule links, and cached 5e SRD cards. The items below extend
 that baseline instead of duplicating it.
@@ -34,7 +34,7 @@ that baseline instead of duplicating it.
 ## Atmosphere and table tools
 
 - **Kenku FM** or **Tabletop Audio** routing through Discord.
-- A user-provided sound pack copied into a future GM Deck update.
+- A user-provided sound pack copied into a future TTRPG Control Deck update.
 - Philips Hue/Home Assistant scene buttons for lights and room ambience.
 - Campaign-specific generator packs for regional NPC names, weather, encounter
   complications and treasure beyond the generic offline GM Sparks already installed.

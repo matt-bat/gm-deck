@@ -5,11 +5,11 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$ruleName = "GM Deck - Macro Deck TCP $Port (Private LAN)"
+$ruleName = "TTRPG Control Deck - Macro Deck TCP $Port (Private LAN)"
 
 Write-Host ''
-Write-Host 'GM Deck wired-PC connection setup' -ForegroundColor Cyan
-Write-Host 'The PC may use Ethernet while GM Deck uses Wi-Fi; both must reach the same router/LAN.'
+Write-Host 'TTRPG Control Deck wired-PC connection setup' -ForegroundColor Cyan
+Write-Host 'The PC may use Ethernet while TTRPG Control Deck uses Wi-Fi; both must reach the same router/LAN.'
 Write-Host 'Do not create an internet/router port-forward for Macro Deck.' -ForegroundColor Yellow
 Write-Host ''
 
@@ -52,6 +52,6 @@ if ($listener) {
 }
 
 Write-Host ''
-Write-Host 'Next: connect GM Deck to the router Wi-Fi, then use the Ethernet IPv4 address and this port in the Macro Deck client.'
+Write-Host 'Next: connect TTRPG Control Deck to the router Wi-Fi, then use the Ethernet IPv4 address and this port in the Macro Deck client.'
 Write-Host 'If it still fails, leave guest Wi-Fi, disable VPN temporarily, and disable AP/SSID/client isolation in the router.'
 Read-Host 'Press Enter to close'

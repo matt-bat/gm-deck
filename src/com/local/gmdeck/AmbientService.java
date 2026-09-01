@@ -120,7 +120,7 @@ public class AmbientService extends Service {
         PendingIntent pending = PendingIntent.getActivity(this, 0, open, PendingIntent.FLAG_UPDATE_CURRENT);
         Notification.Builder builder = new Notification.Builder(this)
                 .setSmallIcon(android.R.drawable.ic_media_play)
-                .setContentTitle("GM Deck ambience")
+                .setContentTitle("TTRPG Control Deck ambience")
                 .setContentText(capitalize(activeScene.replace(",", " + ")) + " playing")
                 .setContentIntent(pending)
                 .setOngoing(true);
@@ -135,7 +135,7 @@ public class AmbientService extends Service {
         try {
             Class<?> channelClass = Class.forName("android.app.NotificationChannel");
             Constructor<?> constructor = channelClass.getConstructor(String.class, CharSequence.class, int.class);
-            Object channel = constructor.newInstance(CHANNEL_ID, "GM Deck ambience", 2);
+            Object channel = constructor.newInstance(CHANNEL_ID, "TTRPG Control Deck ambience", 2);
             NotificationManager manager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
             Method create = NotificationManager.class.getMethod("createNotificationChannel", channelClass);
             create.invoke(manager, channel);

@@ -23,6 +23,7 @@ const check = (condition, message) => {
   if (!condition) throw new Error(message);
 };
 const click = selector => page.locator(selector).click();
+check(await page.title() === 'TTRPG Control Deck', 'Public product title is incorrect');
 const assertChromeFits = async label => {
   const result = await page.evaluate(() => {
     const viewport = { width: innerWidth, height: innerHeight };
@@ -55,11 +56,11 @@ const assertChromeFits = async label => {
 
 await click('#welcomeDone');
 await assertChromeFits('DM view');
-await page.screenshot({ path: path.join(screenshotDir, 'gm-deck-3.1-dm-view.png') });
+await page.screenshot({ path: path.join(screenshotDir, 'ttrpg-control-deck-3.1-dm-view.png') });
 
 await click('#viewSwitch');
 check(await page.locator('#viewPanel').isVisible(), 'Role chooser did not open on the first tap');
-await page.screenshot({ path: path.join(screenshotDir, 'gm-deck-3.1-role-switcher.png') });
+await page.screenshot({ path: path.join(screenshotDir, 'ttrpg-control-deck-3.1-role-switcher.png') });
 await click('[data-view-choice="player"]');
 check(await page.locator('#player').isVisible(), 'Player view did not open on the second tap');
 check(await page.locator('body').getAttribute('data-view') === 'player', 'Player role was not applied');
@@ -78,7 +79,7 @@ await click('[data-player-roll="attack"]');
 const playerState = await page.evaluate(() => JSON.parse(localStorage.getItem('player:main')));
 check(playerState.name === 'Valeros' && playerState.maxHp === 30 && playerState.hp === 29 && playerState.attack === 7, 'Player state did not persist per campaign');
 check(/^\d+$/.test(await page.locator('#stripDice').textContent()), 'Player quick roll did not update the persistent dice result');
-await page.screenshot({ path: path.join(screenshotDir, 'gm-deck-3.1-player-view.png') });
+await page.screenshot({ path: path.join(screenshotDir, 'ttrpg-control-deck-3.1-player-view.png') });
 
 await click('#viewSwitch');
 await click('[data-view-choice="dm"]');
@@ -86,7 +87,7 @@ await click('#sceneControl');
 check(await page.locator('#scenePanel').isVisible(), 'Scene Director did not open');
 check(await page.locator('[data-scene]').count() === 6, 'Scene Director must expose six presets');
 await assertChromeFits('Scene Director');
-await page.screenshot({ path: path.join(screenshotDir, 'gm-deck-3.1-scene-director.png') });
+await page.screenshot({ path: path.join(screenshotDir, 'ttrpg-control-deck-3.1-scene-director.png') });
 await click('[data-scene="break"]');
 const sceneState = await page.evaluate(() => ({
   app: JSON.parse(localStorage.getItem('appState')),

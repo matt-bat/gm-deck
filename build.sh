@@ -25,9 +25,9 @@ zipalign -f 4 gmdeck-unsigned.apk gmdeck-aligned.apk
 if [[ ! -f "$key_store" ]]; then
   keytool -genkeypair -noprompt -keystore "$key_store" -storepass gmdeck-local-key \
     -keypass gmdeck-local-key -alias gmdeck -keyalg RSA -keysize 2048 \
-    -validity 9125 -dname "CN=Local GM Deck, OU=Tabletop, O=Local, C=CA"
+    -validity 9125 -dname "CN=Local TTRPG Control Deck, OU=Tabletop, O=Local, C=CA"
 fi
 
 apksigner sign --ks "$key_store" --ks-pass pass:gmdeck-local-key \
-  --key-pass pass:gmdeck-local-key --out "$app_root/GM-Deck.apk" gmdeck-aligned.apk
-apksigner verify --verbose --print-certs "$app_root/GM-Deck.apk"
+  --key-pass pass:gmdeck-local-key --out "$app_root/TTRPG-Control-Deck.apk" gmdeck-aligned.apk
+apksigner verify --verbose --print-certs "$app_root/TTRPG-Control-Deck.apk"

@@ -1,5 +1,5 @@
 {
-  "name": "gm-deck",
+  "name": "ttrpg-control-deck",
   "version": "3.1.0",
   "private": true,
   "description": "Offline-first Android tabletop companion for Foundry, Roll20, Pathfinder, and D&D.",

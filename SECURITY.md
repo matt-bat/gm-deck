@@ -20,6 +20,6 @@ Please allow reasonable time for assessment and a coordinated fix before public 
 ## Operational boundaries
 
 - Keep Macro Deck on a trusted private LAN; do not expose its port through an internet router.
-- Treat exported GM Deck configuration as private because it can contain campaign URLs and notes.
+- Treat exported TTRPG Control Deck configuration as private because it can contain campaign URLs and notes.
 - Never share the Android signing key used for installed updates.
 - Download companion applications from their official projects and verify published hashes where available.

@@ -1,6 +1,6 @@
-# GM Deck third-party notices
+# TTRPG Control Deck third-party notices
 
-GM Deck's original application code and generated sound effects were created locally for this device.
+TTRPG Control Deck's original application code and generated sound effects were created locally for this device.
 
 ## Google Material Design icons
 
@@ -19,4 +19,4 @@ The Library tab can request D&D 5e open-rule entries from the community-maintain
 
 ## Linked services
 
-Archives of Nethys, Foundry Virtual Tabletop, Roll20, Tabletop Audio, Macro Deck, KDE Connect, Discord, D&D Beyond, Demiplane, Pathbuilder, and YouTube are linked external projects or services. They are not bundled with or endorsed by GM Deck. Their names and content remain the property of their respective owners.
+Archives of Nethys, Foundry Virtual Tabletop, Roll20, Tabletop Audio, Macro Deck, KDE Connect, Discord, D&D Beyond, Demiplane, Pathbuilder, and YouTube are linked external projects or services. They are not bundled with or endorsed by TTRPG Control Deck. Their names and content remain the property of their respective owners.
